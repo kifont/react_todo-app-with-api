@@ -49,7 +49,7 @@ export const TodoItem: React.FC<Props> = ({
     }
 
     if (!trimmedTitle) {
-      onDelete(todo.id);
+      setHasSubmitted(false);
 
       return;
     }

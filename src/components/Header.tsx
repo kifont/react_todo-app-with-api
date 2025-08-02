@@ -26,7 +26,7 @@ export const Header: React.FC<Props> = ({
     if (!disabled) {
       inputRef.current?.focus();
     }
-  }, [disabled]);
+  }, [disabled, inputRef]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();

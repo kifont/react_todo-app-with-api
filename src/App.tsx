@@ -152,43 +152,59 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleToggleAll = async (value: boolean) => {
-    const notCompletedTodos = todos.filter(todo => !todo.completed);
-    const alreadyCompletedAll = todos.every(todo => todo.completed === true);
+  // const handleToggleAll = async (value: boolean) => {
+  //   const notCompletedTodos = todos.filter(todo => !todo.completed);
+  //   const alreadyCompletedAll = todos.every(todo => todo.completed === true);
 
-    if (value && !alreadyCompletedAll) {
-      return Promise.allSettled(
-        notCompletedTodos.map(todo => handleToggleTodo(todo).then(() => todo)),
-      )
-        .then(values => {
-          values.map(value1 => {
-            if (value1.status === 'rejected') {
-              setError('Unable to update a todo');
-            } else {
-              setTodos((currentTodos: Todo[]) => {
-                return currentTodos;
-              });
-            }
-          });
-        })
-        .finally(() => {});
-    } else {
-      return Promise.allSettled(
-        todos.map(todo => handleToggleTodo(todo).then(() => todo)),
-      )
-        .then(values => {
-          values.map(value1 => {
-            if (value1.status === 'rejected') {
-              setError('Unable to update a todo');
-            } else {
-              setTodos((currentTodos: Todo[]) => {
-                return currentTodos;
-              });
-            }
-          });
-        })
-        .finally(() => {});
-    }
+  //   if (value && !alreadyCompletedAll) {
+  //     return Promise.allSettled(
+  //       notCompletedTodos.map(todo => handleToggleTodo(todo).then(() => todo)),
+  //     )
+  //       .then(values => {
+  //         values.map(value1 => {
+  //           if (value1.status === 'rejected') {
+  //             setError('Unable to update a todo');
+  //           } else {
+  //             setTodos((currentTodos: Todo[]) => {
+  //               return currentTodos;
+  //             });
+  //           }
+  //         });
+  //       })
+  //       .finally(() => {});
+  //   } else {
+  //     return Promise.allSettled(
+  //       todos.map(todo => handleToggleTodo(todo).then(() => todo)),
+  //     )
+  //       .then(values => {
+  //         values.map(value1 => {
+  //           if (value1.status === 'rejected') {
+  //             setError('Unable to update a todo');
+  //           } else {
+  //             setTodos((currentTodos: Todo[]) => {
+  //               return currentTodos;
+  //             });
+  //           }
+  //         });
+  //       })
+  //       .finally(() => {});
+  //   }
+  // };
+  const handleToggleAll = async () => {
+    const allCompleted = todos.every(todo => todo.completed);
+
+    // Змінюємо лише ті тудушки, у яких статус потрібно змінити
+    const todosToUpdate = todos.filter(todo => todo.completed === allCompleted);
+
+    await Promise.allSettled(
+      todosToUpdate.map(todo => handleToggleTodo(todo)),
+    ).then(results => {
+      const hasError = results.some(result => result.status === 'rejected');
+
+      if (hasError) {
+        setError('Unable to update a todo');
+      }
+    });
   };
 
   const handleTitleTodoUpgrade = async (todoId: number, newTitle: string) => {
@@ -217,6 +233,7 @@ export const App: React.FC = () => {
       );
     } catch {
       setError('Unable to update a todo');
+      throw new Error('Unable to update todo');
     } finally {
       setIsLoading(false);
       setUpdatingTodoIds(ids => ids.filter(id => id !== todoId));

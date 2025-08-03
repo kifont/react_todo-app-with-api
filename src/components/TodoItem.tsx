@@ -25,7 +25,7 @@ export const TodoItem: React.FC<Props> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(todo.title);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [wasEscapePressed, setWasEscapePressed] = useState(false);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -36,12 +36,6 @@ export const TodoItem: React.FC<Props> = ({
   const updateTodoTitle = async () => {
     const trimmedTitle = editedTitle.trim();
 
-    if (hasSubmitted) {
-      return;
-    }
-
-    setHasSubmitted(true);
-
     if (trimmedTitle === todo.title) {
       setIsEditing(false);
 
@@ -49,13 +43,17 @@ export const TodoItem: React.FC<Props> = ({
     }
 
     if (!trimmedTitle) {
-      setHasSubmitted(false);
+      await onDelete(todo.id);
 
       return;
     }
 
-    onRename(todo.id, trimmedTitle);
-    setIsEditing(false);
+    try {
+      await onRename(todo.id, trimmedTitle);
+      setIsEditing(false);
+    } catch {
+      // no operation - error already handled inside onRename
+    }
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -68,11 +66,18 @@ export const TodoItem: React.FC<Props> = ({
   };
 
   const handleBlur = async () => {
+    if (wasEscapePressed) {
+      setWasEscapePressed(false);
+
+      return;
+    }
+
     await updateTodoTitle();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
+      setWasEscapePressed(true);
       setEditedTitle(todo.title);
       setIsEditing(false);
     }
@@ -101,7 +106,7 @@ export const TodoItem: React.FC<Props> = ({
             className="todo__title"
             onDoubleClick={() => {
               setIsEditing(true);
-              setHasSubmitted(false);
+              setWasEscapePressed(false);
             }}
           >
             {todo.title}
